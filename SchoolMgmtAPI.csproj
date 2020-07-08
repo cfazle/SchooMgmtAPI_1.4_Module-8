@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<UserSecretsId>2996c091-be45-432d-a2d0-c7e8b592ca33</UserSecretsId>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.5">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	<!--	<ProjectReference Include="..\LoggerManager\LoggerService.csproj" /> -->
+		<ProjectReference Include="..\LoggerService\LoggerService.csproj" />
+		<ProjectReference Include="..\Repository\Repository.csproj" />
+	</ItemGroup>
+</Project>
