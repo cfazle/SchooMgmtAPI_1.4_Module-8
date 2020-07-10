@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
+using Entities.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SchoolMgmtAPI.Controllers
@@ -62,6 +63,37 @@ namespace SchoolMgmtAPI.Controllers
             var submission = _mapper.Map<SubmissionDto>(submissionDb);
 
             return Ok(submission);
+        }
+
+        [HttpPost]
+        public IActionResult CreateSubmissionForAssinment(Guid assignmentId, [FromBody] SubmissionForCreationDto submission)
+        {
+            if (submission == null)
+            {
+                _logger.LogError("SubmissionForCreationDto object sent from client is null.");
+                return BadRequest("SubmissionForCreationDto object is null");
+            }
+
+            //    var organization = _repository.Company.GetCompany(companyId, trackChanges: false);
+            var assignment = _repository.Assignment.GetAssignments(assignmentId, trackChanges: false);
+
+            if (assignment == null)
+            {
+                _logger.LogInfo($"Section with id: {assignmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+
+            var submissionEntity = _mapper.Map<Submission>(submission);
+
+            //      _repository.Employee.CreateEmployeeForCompany(companyId, employeeEntity);
+
+            _repository.Submission.CreateSubmissionForAssignment(assignmentId, submissionEntity);
+            _repository.Save();
+
+            var submissionToReturn = _mapper.Map<SubmissionDto>(submissionEntity);
+
+            return CreatedAtRoute(new {assignmentId, id = submissionToReturn.Id }, submissionToReturn);
         }
 
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
+using Entities.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SchoolMgmtAPI.Controllers
@@ -62,6 +63,37 @@ namespace SchoolMgmtAPI.Controllers
             var assignment = _mapper.Map<AssignmentDto>(assignmentDb);
 
             return Ok(assignment);
+        }
+
+        [HttpPost]
+        public IActionResult CreateAssinmentForEnrollment(Guid enrollmentId, [FromBody] AssignmentForCreationDto assignment)
+        {
+            if (assignment == null)
+            {
+                _logger.LogError("AssignmentForCreationDto object sent from client is null.");
+                return BadRequest("AssignmentForCreationDto object is null");
+            }
+
+            //    var organization = _repository.Company.GetCompany(companyId, trackChanges: false);
+            var enrollment = _repository.Enrollment.GetEnrollments(enrollmentId, trackChanges: false);
+
+            if (enrollment == null)
+            {
+                _logger.LogInfo($"Section with id: {enrollmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+
+            var assignmentEntity = _mapper.Map<Assignment>(assignment);
+
+            //      _repository.Employee.CreateEmployeeForCompany(companyId, employeeEntity);
+
+            _repository.Assignment.CreateAssignmentForEnrollment(enrollmentId, assignmentEntity);
+            _repository.Save();
+
+            var assignmentToReturn = _mapper.Map<AssignmentDto>(assignmentEntity);
+
+            return CreatedAtRoute(new { enrollmentId, id = assignmentToReturn.Id }, assignmentToReturn);
         }
     }
 }

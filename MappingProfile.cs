@@ -26,6 +26,24 @@ namespace SchoolMgmtAPI
             CreateMap<Assignment, AssignmentDto>();
 
             CreateMap<Submission, SubmissionDto>();
+
+            CreateMap<OrganizationForCreationDto, Organization>();
+
+            CreateMap<OrganizationForUpdateDto, Organization>();
+
+            CreateMap<UserForCreationDto, User>();
+
+            CreateMap<UserForUpdateDto, User>().ReverseMap();
+
+            CreateMap<CourseForCreationDto, Course>();
+
+            CreateMap<SectionForCreationDto, Section>();
+
+            CreateMap<EnrollmentForCreationDto, Enrollment>();
+
+            CreateMap<AssignmentForCreationDto, Assignment>();
+
+            CreateMap<SubmissionForCreationDto, Submission>();
         }
     }
 }

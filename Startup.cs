@@ -1,14 +1,15 @@
+using AutoMapper;
 using SchoolMgmtAPI.Extensions;
+using Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NLog;
 using System.IO;
-using AutoMapper;
-using Contracts;
 
 namespace SchoolMgmtAPI
 {
@@ -25,11 +26,20 @@ namespace SchoolMgmtAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.ConfigureCors();
+            services.ConfigureIISIntegration();
             services.ConfigureLoggerService();
             services.ConfigureSqlContext(Configuration);
             services.ConfigureRepositoryManager();
-            services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddControllers(config =>
+            {
+                config.RespectBrowserAcceptHeader = true;
+                config.ReturnHttpNotAcceptable = true;
+            }).AddNewtonsoftJson()
+            .AddXmlDataContractSerializerFormatters()
+              .AddCustomCSVFormatter();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,12 +53,16 @@ namespace SchoolMgmtAPI
             {
                 app.UseHsts();
             }
+
             app.ConfigureExceptionHandler(logger);
             app.UseHttpsRedirection();
-            app.UseStaticFiles(); 
+            app.UseStaticFiles();
+
             app.UseCors("CorsPolicy");
-            app.UseForwardedHeaders( new ForwardedHeadersOptions {
-                ForwardedHeaders = ForwardedHeaders.All 
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.All
             });
 
             app.UseRouting();
@@ -60,5 +74,7 @@ namespace SchoolMgmtAPI
                 endpoints.MapControllers();
             });
         }
+
+
     }
 }

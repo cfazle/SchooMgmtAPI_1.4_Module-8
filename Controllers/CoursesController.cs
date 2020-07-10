@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
+using Entities.Models;
 using Microsoft.AspNetCore.Mvc;
+using Nest;
 
 namespace SchoolMgmtAPI.Controllers
 {
@@ -41,7 +43,9 @@ namespace SchoolMgmtAPI.Controllers
             return Ok(coursesDto);
         }
 
-        [HttpGet("{id}")]
+       //    [HttpGet("{id}", Name = "GetCourseForUser")]
+
+       [HttpGet("{id}")]
         public IActionResult GetCourseForUser(Guid userId, Guid id)
         {
             var organization = _repository.User.GetUsers(userId, trackChanges: false);
@@ -61,6 +65,36 @@ namespace SchoolMgmtAPI.Controllers
             var course = _mapper.Map<CourseDto>(courseDb);
 
             return Ok(course);
+        }
+
+        [HttpPost]
+        public IActionResult CreateCourseForUser( Guid userId, [FromBody] CourseForCreationDto course)
+        {
+            if (course == null)
+            {
+                _logger.LogError("CourseForCreationDto object sent from client is null.");
+                return BadRequest("CourseForCreationDto object is null");
+            }
+
+            //    var organization = _repository.Company.GetCompany(companyId, trackChanges: false);
+            var user = _repository.User.GetUsers( userId,  trackChanges: false);
+
+            if (user == null)
+            {
+                _logger.LogInfo($"User with id: {userId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var courseEntity = _mapper.Map<Course>(course);
+
+            //      _repository.Employee.CreateEmployeeForCompany(companyId, employeeEntity);
+
+            _repository.Course.CreateCourseForUser(userId, courseEntity);
+            _repository.Save();
+
+            var courseToReturn = _mapper.Map<CourseDto>(courseEntity);
+
+            return CreatedAtRoute( new { userId, id = courseToReturn.Id }, courseToReturn);
         }
 
     }

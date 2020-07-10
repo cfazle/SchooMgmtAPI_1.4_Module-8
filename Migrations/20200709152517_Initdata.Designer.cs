@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SchoolMgmtAPI.Migrations
 {
     [DbContext(typeof(RepositoryContext))]
-    [Migration("20200707142042_Initdata")]
+    [Migration("20200709152517_Initdata")]
     partial class Initdata
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
