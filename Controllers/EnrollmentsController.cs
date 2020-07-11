@@ -4,6 +4,7 @@ using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
 using Entities.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SchoolMgmtAPI.Controllers
@@ -93,6 +94,92 @@ namespace SchoolMgmtAPI.Controllers
             var enrollmentToReturn = _mapper.Map<EnrollmentDto>(enrollmentEntity);
 
             return CreatedAtRoute(new { sectionId, id = enrollmentToReturn.Id }, enrollmentToReturn);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteEnrollmentForSection(Guid sectionId, Guid id)
+        {
+            var section = _repository.Section.GetSections(sectionId, trackChanges: false);
+            if (section == null)
+            {
+                _logger.LogInfo($"Section with id: {sectionId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var enrollmentForSection = _repository.Enrollment.GetEnrollment(sectionId, id, trackChanges: false);
+            if (enrollmentForSection == null)
+            {
+                _logger.LogInfo($"Enrollment with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _repository.Enrollment.DeleteEnrollment(enrollmentForSection);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateEnrollmentForSection(Guid sectionId, Guid id, [FromBody] EnrollmentForUpdateDto enrollment)
+        {
+            if (enrollment == null)
+            {
+                _logger.LogError("EnrollmentForUpdateDto object sent from client is null.");
+                return BadRequest("EnrollmentForUpdateDto object is null");
+            }
+
+            var section = _repository.Section.GetSections(sectionId, trackChanges: false);
+            if (section == null)
+            {
+                _logger.LogInfo($"Section with id: {sectionId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var enrollmentEntity = _repository.Enrollment.GetEnrollment(sectionId, id, trackChanges: true);
+            if (enrollmentEntity == null)
+            {
+                _logger.LogInfo($"Section with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _mapper.Map(enrollment, enrollmentEntity);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult PartiallyUpdateEnrollmentForSection(Guid sectionId, Guid id, [FromBody] JsonPatchDocument<EnrollmentForUpdateDto> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                _logger.LogError("patchDoc object sent from client is null.");
+                return BadRequest("patchDoc object is null");
+            }
+
+            var section = _repository.Section.GetSections(sectionId, trackChanges: false);
+            if (section == null)
+            {
+                _logger.LogInfo($"Section with id: {sectionId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var enrollmentEntity = _repository.Enrollment.GetEnrollment(sectionId, id, trackChanges: true);
+            if (enrollmentEntity == null)
+            {
+                _logger.LogInfo($"Enrollment with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var enrollmentToPatch = _mapper.Map<EnrollmentForUpdateDto>(enrollmentEntity);
+
+            patchDoc.ApplyTo(enrollmentToPatch);
+
+            _mapper.Map(enrollmentToPatch, enrollmentEntity);
+
+            _repository.Save();
+
+            return NoContent();
         }
     }
 }

@@ -31,6 +31,10 @@ namespace Repository
             Create(section);
         }
 
+        public void DeleteSection(Section section)
+        {
+            Delete(section);
+        }
     }
 }
    

@@ -11,5 +11,6 @@ namespace Contracts
        Section GetSection(Guid courseId, Guid id, bool trackChanges);
 
         void CreateSectionForCourse(Guid courseId, Section section);
+        void DeleteSection(Section section);
     }
 }

@@ -30,7 +30,10 @@ namespace Repository
             Create(assignment);
         }
 
-
+        public void DeleteAssignment(Assignment assignment)
+        {
+            Delete(assignment);
+        }
     }
 
        

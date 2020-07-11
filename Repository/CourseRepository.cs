@@ -31,7 +31,9 @@ namespace Repository
             Create(course);
         }
 
-
-
+        public void DeleteCourse(Course course)
+        {
+            Delete(course);
+        }
     }
 }

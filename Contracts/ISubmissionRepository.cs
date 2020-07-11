@@ -11,6 +11,7 @@ namespace Contracts
         Submission GetSubmission(Guid assignmentId, Guid id, bool trackChanges);
 
         void CreateSubmissionForAssignment(Guid assignmentId, Submission submission);
+        void DeleteSubmission(Submission submission);
 
     }
 }

@@ -30,6 +30,11 @@ namespace Repository
             submission.AssignmentId = assignmentId;
             Create(submission);
         }
+
+        public void DeleteSubmission(Submission submission)
+        {
+            Delete(submission);
+        }
     }
 }
 

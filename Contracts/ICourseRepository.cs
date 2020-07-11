@@ -10,7 +10,8 @@ namespace Contracts
         IEnumerable<Course> GetCourses(Guid userId, bool trackChanges);
         Course GetCourse(Guid userId, Guid id, bool trackChanges);
 
-        void CreateCourseForUser(Guid userId,Course course); 
+        void CreateCourseForUser(Guid userId,Course course);
+        void DeleteCourse(Course course);
     }
     
 }

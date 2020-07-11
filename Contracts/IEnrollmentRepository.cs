@@ -11,5 +11,6 @@ namespace Contracts
         Enrollment GetEnrollment(Guid sectionId, Guid id, bool trackChanges);
 
         void CreateEnrollmentForSection(Guid sectionId, Enrollment Enrollment);
+        void DeleteEnrollment(Enrollment enrollment);
     }
 }

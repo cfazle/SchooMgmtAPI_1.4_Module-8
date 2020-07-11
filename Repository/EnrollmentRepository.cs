@@ -31,6 +31,10 @@ namespace Repository
             Create(enrollment);
         }
 
+        public void DeleteEnrollment(Enrollment enrollment)
+        {
+           Delete(enrollment);
+        }
     }
 }
    

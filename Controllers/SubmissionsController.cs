@@ -4,6 +4,7 @@ using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
 using Entities.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SchoolMgmtAPI.Controllers
@@ -94,6 +95,91 @@ namespace SchoolMgmtAPI.Controllers
             var submissionToReturn = _mapper.Map<SubmissionDto>(submissionEntity);
 
             return CreatedAtRoute(new {assignmentId, id = submissionToReturn.Id }, submissionToReturn);
+        }
+        [HttpDelete("{id}")]
+        public IActionResult DeleteSubissionForAssignment(Guid assignmentId, Guid id)
+        {
+            var assignment = _repository.Assignment.GetAssignments(assignmentId, trackChanges: false);
+            if (assignment == null)
+            {
+                _logger.LogInfo($"Enrollment with id: {assignmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var submissionForAssignment = _repository.Submission.GetSubmission(assignmentId, id, trackChanges: false);
+            if (submissionForAssignment == null)
+            {
+                _logger.LogInfo($"Submission with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _repository.Submission.DeleteSubmission(submissionForAssignment);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateSubmissionForAssignment(Guid assignmentId, Guid id, [FromBody] SubmissionForUpdateDto submission)
+        {
+            if (submission == null)
+            {
+                _logger.LogError("SubmissionForUpdateDto object sent from client is null.");
+                return BadRequest("Submission ForUpdateDto object is null");
+            }
+
+            var assignment = _repository.Assignment.GetAssignments(assignmentId, trackChanges: false);
+            if (assignment == null)
+            {
+                _logger.LogInfo($"Assignment with id: {assignmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var submissionEntity = _repository.Submission.GetSubmission(assignmentId, id, trackChanges: true);
+            if (submissionEntity == null)
+            {
+                _logger.LogInfo($"Submission with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _mapper.Map(submission, submissionEntity);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult PartiallyUpdatesubmissionForAssignment(Guid assignmentId, Guid id, [FromBody] JsonPatchDocument<SubmissionForUpdateDto> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                _logger.LogError("patchDoc object sent from client is null.");
+                return BadRequest("patchDoc object is null");
+            }
+
+            var assignment = _repository.Assignment.GetAssignments(assignmentId, trackChanges: false);
+            if (assignment == null)
+            {
+                _logger.LogInfo($"Assignment with id: {assignmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var submissionEntity = _repository.Submission.GetSubmission(assignmentId, id, trackChanges: true);
+            if (submissionEntity == null)
+            {
+                _logger.LogInfo($"Submission with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var submissionToPatch = _mapper.Map<SubmissionForUpdateDto>(submissionEntity);
+
+            patchDoc.ApplyTo(submissionToPatch);
+
+            _mapper.Map(submissionToPatch, submissionEntity);
+
+            _repository.Save();
+
+            return NoContent();
         }
 
     }

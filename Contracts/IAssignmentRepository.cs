@@ -11,5 +11,6 @@ namespace Contracts
         Assignment GetAssignment(Guid enrollmentId, Guid id, bool trackChanges);
 
         void CreateAssignmentForEnrollment(Guid enrollmentId, Assignment assignment);
+        void DeleteAssignment(Assignment assignment);
     }
 }

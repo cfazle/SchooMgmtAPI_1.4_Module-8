@@ -4,6 +4,7 @@ using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
 using Entities.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SchoolMgmtAPI.Controllers
@@ -93,6 +94,92 @@ namespace SchoolMgmtAPI.Controllers
             var sectionToReturn = _mapper.Map<SectionDto>(sectionEntity);
 
             return CreatedAtRoute(new { courseId, id = sectionToReturn.Id }, sectionToReturn);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteSectionForCourse(Guid courseId, Guid id)
+        {
+            var course = _repository.Course.GetCourses(courseId, trackChanges: false);
+            if ( course==null)
+            {
+                _logger.LogInfo($"Course with id: {courseId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var sectionForCourse = _repository.Section.GetSection(courseId, id, trackChanges: false);
+            if (sectionForCourse == null)
+            {
+                _logger.LogInfo($"Section with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _repository.Section.DeleteSection(sectionForCourse);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateSectionForCourse(Guid courseId, Guid id, [FromBody] SectionForUpdateDto section)
+        {
+            if (section== null)
+            {
+                _logger.LogError("SectionForUpdateDto object sent from client is null.");
+                return BadRequest("SectionForUpdateDto object is null");
+            }
+
+            var course = _repository.Course.GetCourses(courseId, trackChanges: false);
+            if (course == null)
+            {
+                _logger.LogInfo($"Coursewith id: {courseId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var sectionEntity = _repository.Section.GetSection(courseId, id, trackChanges: true);
+            if (sectionEntity == null)
+            {
+                _logger.LogInfo($"Section with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _mapper.Map(section, sectionEntity);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult PartiallyUpdateSectionForCourse(Guid courseId, Guid id, [FromBody] JsonPatchDocument<SectionForUpdateDto> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                _logger.LogError("patchDoc object sent from client is null.");
+                return BadRequest("patchDoc object is null");
+            }
+
+            var course = _repository.Course.GetCourses(courseId, trackChanges: false);
+            if (course == null)
+            {
+                _logger.LogInfo($"Course with id: {courseId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var sectionEntity = _repository.Section.GetSection(courseId, id, trackChanges: true);
+            if (sectionEntity == null)
+            {
+                _logger.LogInfo($"Section with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var sectionToPatch = _mapper.Map<SectionForUpdateDto>(sectionEntity);
+
+            patchDoc.ApplyTo(sectionToPatch);
+
+            _mapper.Map(sectionToPatch, sectionEntity);
+
+            _repository.Save();
+
+            return NoContent();
         }
     }
 }

@@ -4,6 +4,7 @@ using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
 using Entities.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SchoolMgmtAPI.Controllers
@@ -94,6 +95,93 @@ namespace SchoolMgmtAPI.Controllers
             var assignmentToReturn = _mapper.Map<AssignmentDto>(assignmentEntity);
 
             return CreatedAtRoute(new { enrollmentId, id = assignmentToReturn.Id }, assignmentToReturn);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteAssignmenttForEnrollment(Guid enrollmentId, Guid id)
+        {
+            var enrollment = _repository.Enrollment.GetEnrollments(enrollmentId, trackChanges: false);
+            if (enrollment == null)
+            {
+                _logger.LogInfo($"Enrollment with id: {enrollmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var assignmentForEnrollment = _repository.Assignment.GetAssignment(enrollmentId, id, trackChanges: false);
+            if (assignmentForEnrollment == null)
+            {
+                _logger.LogInfo($"Assignment with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _repository.Assignment.DeleteAssignment(assignmentForEnrollment);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateAssignmentForEnrollment(Guid enrollmentId, Guid id, [FromBody] AssignmentForUpdateDto assignment)
+        {
+            if (assignment == null)
+            {
+                _logger.LogError("AssignmentForUpdateDto object sent from client is null.");
+                return BadRequest("AssignmentForUpdateDto object is null");
+            }
+
+            var enrollment = _repository.Enrollment.GetEnrollments(enrollmentId, trackChanges: false);
+            if (enrollment == null)
+            {
+                _logger.LogInfo($"Enrollment with id: {enrollmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var assignmentEntity = _repository.Assignment.GetAssignment(enrollmentId, id, trackChanges: true);
+            if (assignmentEntity == null)
+            {
+                _logger.LogInfo($"Assignment with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            _mapper.Map(assignment, assignmentEntity);
+            _repository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult PartiallyUpdateAssignmentForEnrollment(Guid enrollmentId, Guid id, [FromBody] JsonPatchDocument<AssignmentForUpdateDto> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                _logger.LogError("patchDoc object sent from client is null.");
+                return BadRequest("patchDoc object is null");
+            }
+
+            var enrollment = _repository.Enrollment.GetEnrollments(enrollmentId, trackChanges: false);
+            if (enrollment == null)
+            {
+                _logger.LogInfo($"Enrollment with id: {enrollmentId} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var assignmentEntity = _repository.Enrollment.GetEnrollment(enrollmentId, id, trackChanges: true);
+            if (assignmentEntity == null)
+            {
+                _logger.LogInfo($"Assignment with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+
+            var assignmentToPatch = _mapper.Map<AssignmentForUpdateDto>(assignmentEntity);
+
+            patchDoc.ApplyTo(assignmentToPatch);
+
+            _mapper.Map(assignmentToPatch, assignmentEntity);
+
+            _repository.Save();
+
+            return NoContent();
         }
     }
 }
